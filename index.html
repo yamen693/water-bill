@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Water Bill Splitter Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-blue-50 min-h-screen p-6 flex flex-col items-center justify-start space-y-6">
+
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-8 space-y-6">
+    <h2 class="text-2xl font-bold text-blue-800">💧 Water Bill Splitter Pro</h2>
+
+    <!-- Add Person Form -->
+    <div class="flex flex-col md:flex-row items-center gap-4">
+      <input type="text" id="personName" class="flex-1 border border-gray-300 rounded-lg p-2" placeholder="Person name" />
+      <input type="number" id="unpaidAmount" class="flex-1 border border-gray-300 rounded-lg p-2" placeholder="Old unpaid (EGP)" />
+      <button onclick="addPerson()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl">Add Person</button>
+    </div>
+
+    <!-- People List -->
+    <div id="peopleList" class="text-sm bg-blue-100 p-4 rounded-lg hidden">
+      <h3 class="font-bold mb-2 text-blue-700">👥 People Added:</h3>
+      <ul id="peopleUl" class="list-disc pl-5 space-y-1"></ul>
+    </div>
+
+    <!-- Total Bill Input -->
+    <div>
+      <label class="block text-gray-700 font-semibold mb-1">Enter New Water Bill (EGP)</label>
+      <input type="number" id="totalBill" class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 3000" />
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex space-x-3">
+      <button onclick="calculate()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl">Calculate</button>
+      <button onclick="resetAll()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-xl">Reset</button>
+    </div>
+
+    <!-- Results -->
+    <div id="output" class="text-gray-800 space-y-4"></div>
+  </div>
+
+  <script>
+    const people = [];
+
+    function addPerson() {
+      const name = document.getElementById("personName").value.trim();
+      const unpaid = parseFloat(document.getElementById("unpaidAmount").value);
+
+      if (!name || isNaN(unpaid) || unpaid < 0) {
+        alert("Please enter a valid name and unpaid amount.");
+        return;
+      }
+
+      people.push({ name, unpaid });
+      document.getElementById("personName").value = "";
+      document.getElementById("unpaidAmount").value = "";
+
+      updatePeopleList();
+    }
+
+    function updatePeopleList() {
+      const list = document.getElementById("peopleUl");
+      const container = document.getElementById("peopleList");
+      list.innerHTML = "";
+      people.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name}: ${p.unpaid.toFixed(2)} EGP`;
+        list.appendChild(li);
+      });
+      container.classList.remove("hidden");
+    }
+
+    function calculate() {
+      const totalBill = parseFloat(document.getElementById("totalBill").value);
+      const output = document.getElementById("output");
+      output.innerHTML = "";
+
+      if (people.length === 0) {
+        output.innerHTML = `<div class="text-red-600 font-semibold">⚠️ Add at least one person first.</div>`;
+        return;
+      }
+
+      if (isNaN(totalBill) || totalBill < 0) {
+        output.innerHTML = `<div class="text-red-600 font-semibold">⚠️ Enter a valid total bill.</div>`;
+        return;
+      }
+
+      const totalUnpaid = people.reduce((sum, p) => sum + p.unpaid, 0);
+      const difference = Math.abs(totalBill - totalUnpaid);
+      const share = difference / people.length;
+
+      let summary = `
+        <div class="bg-blue-100 rounded-lg p-4">
+          <p class="font-medium">📊 Total unpaid from previous bills: <strong>${totalUnpaid.toFixed(2)} EGP</strong></p>
+          <p class="font-medium">🧮 Difference between new bill and unpaid total: <strong>${difference.toFixed(2)} EGP</strong></p>
+          <p class="font-medium">💧 Each person pays from new bill: <strong>${share.toFixed(2)} EGP</strong></p>
+        </div>
+      `;
+
+      let tableRows = people.map(p => {
+        const totalDue = p.unpaid + share;
+        return `
+          <tr class="border-b">
+            <td class="py-2 px-4">${p.name}</td>
+            <td class="py-2 px-4 text-center">${p.unpaid.toFixed(2)}</td>
+            <td class="py-2 px-4 text-center">${share.toFixed(2)}</td>
+            <td class="py-2 px-4 text-center font-semibold text-blue-700">${totalDue.toFixed(2)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const tableHTML = `
+        <div>
+          <h3 class="text-lg font-bold mt-4 mb-2 text-gray-800">📌 Final Amount Due per Person</h3>
+          <table class="w-full border border-gray-300 rounded-lg overflow-hidden text-sm">
+            <thead class="bg-blue-100">
+              <tr>
+                <th class="py-2 px-4 text-left">Name</th>
+                <th class="py-2 px-4 text-center">Old Unpaid (EGP)</th>
+                <th class="py-2 px-4 text-center">New Share (EGP)</th>
+                <th class="py-2 px-4 text-center">Total Due (EGP)</th>
+              </tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </div>
+      `;
+
+      output.innerHTML = summary + tableHTML;
+    }
+
+    function resetAll() {
+      document.getElementById("personName").value = "";
+      document.getElementById("unpaidAmount").value = "";
+      document.getElementById("totalBill").value = "";
+      document.getElementById("peopleUl").innerHTML = "";
+      document.getElementById("peopleList").classList.add("hidden");
+      document.getElementById("output").innerHTML = "";
+      people.length = 0;
+    }
+  </script>
+
+</body>
+</html>
