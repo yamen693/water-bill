@@ -1,176 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <title>Water Bill Splitter Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Water Bill Splitter | مقسم فاتورة المياه</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+      transition: all 0.3s ease;
+    }
+  </style>
 </head>
-<body class="bg-blue-50 min-h-screen p-6 flex flex-col items-center justify-start space-y-6">
+<body class="bg-blue-50 min-h-screen p-6 flex flex-col items-center space-y-6 transition-all duration-300 ease-in-out">
 
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl p-8 space-y-6">
-        <h2 class="text-2xl font-bold text-blue-800">💧 Water Bill Splitter Pro</h2>
-
-        <!-- Add Person Form -->
-        <div class="flex flex-col md:flex-row items-center gap-4">
-            <input type="text" id="personName" class="flex-1 border border-gray-300 rounded-lg p-2" placeholder="Person name" />
-            <input type="number" id="unpaidAmount" class="flex-1 border border-gray-300 rounded-lg p-2" placeholder="Unpaid amount (EGP)" />
-            <button onclick="addPerson()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl">Add Person</button>
-        </div>
-
-        <!-- People List -->
-        <div id="peopleList" class="text-sm bg-blue-100 p-4 rounded-lg hidden">
-            <h3 class="font-bold mb-2 text-blue-700">👥 People Added:</h3>
-            <ul id="peopleUl" class="list-disc pl-5 space-y-1"></ul>
-        </div>
-
-        <!-- Total Bill Input -->
-        <div>
-            <label class="block text-gray-700 font-semibold mb-1">Enter New Water Bill (EGP)</label>
-            <input type="number" id="totalBill" class="w-full border border-gray-300 rounded-lg p-2" placeholder="e.g. 3000" />
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex space-x-3">
-            <button onclick="calculate()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl">Calculate</button>
-            <button onclick="resetAll()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-xl">Reset</button>
-        </div>
-
-        <!-- Results -->
-        <div id="output" class="text-gray-800 space-y-4"></div>
-        <div class="flex space-x-3">
-          <button onclick="calculate()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl">احسب</button>
-          <button onclick="resetAll()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-xl">إعادة تعيين</button>
-          <button id="downloadPdfBtn" onclick="downloadPDF()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl hidden">
-            download results  pdf
-          </button>
-        </div>
-        
-
-        <a href="index-ar.html"
-        class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200">
-       🇪🇬 التبديل إلى العربية
-     </a>
-
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-6xl p-8 space-y-6 text-left transition-all duration-300 ease-in-out" id="container">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+      <h2 id="title" class="text-2xl font-bold text-blue-800">💧 Water Bill Splitter</h2>
+      <button onclick="toggleLanguage()" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-semibold py-1 px-3 rounded-lg text-sm">
+        العربية
+      </button>
     </div>
-<!-- قبل سكربتك -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 
-<script>
-  const people = [];
+    <!-- Add/Edit Form -->
+    <div class="flex flex-row flex-wrap items-center gap-4">
+      <input type="text" id="personName" class="border border-gray-300 rounded-lg p-2 w-36" placeholder="Name" />
+      <input type="number" id="unpaidAmount" class="border border-gray-300 rounded-lg p-2 w-36" placeholder="Unpaid (EGP)" />
+      <button onclick="addPerson()" id="addBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl">Add Person</button>
+    </div>
 
-  function addPerson() {
-      const name = document.getElementById("personName").value.trim();
-      const unpaid = parseFloat(document.getElementById("unpaidAmount").value);
+    <!-- People List -->
+    <div id="peopleList" class="flex flex-row flex-wrap gap-4 text-sm bg-blue-100 p-4 rounded-lg hidden">
+      <ul id="peopleUl" class="flex flex-row flex-wrap gap-4 list-none p-0 m-0"></ul>
+    </div>
 
-      if (!name || isNaN(unpaid) || unpaid < 0) {
-          alert("please enter a name");
-          return;
-      }
+    <!-- Total Bill Input -->
+    <div class="w-full">
+      <label id="totalLabel" class="block text-gray-700 font-semibold mb-1">Enter New Bill (EGP)</label>
+      <input type="number" id="totalBill" class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 3000" />
+    </div>
 
-      people.push({ name, unpaid });
-      document.getElementById("personName").value = "";
-      document.getElementById("unpaidAmount").value = "";
+    <!-- Action Buttons -->
+    <div class="flex flex-row flex-wrap gap-3">
+      <button onclick="calculate()" id="calcBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl">Calculate</button>
+      <button onclick="resetAll()" id="resetBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-xl">Reset</button>
+      <button id="downloadPdfBtn" onclick="downloadPDF()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl hidden">Download PDF</button>
+    </div>
 
-      updatePeopleList();
-  }
+    <!-- Output -->
+    <div id="output" class="text-gray-800 space-y-4"></div>
+  </div>
 
-  function updatePeopleList() {
+  <script>
+    let lang = "en";
+    const people = [
+      { name: "Abdelmged", unpaid: 0 },
+      { name: "Ahmed Saeed", unpaid: 0 },
+      { name: "Mohamed Senary", unpaid: 0 },
+      { name: "Mohamed Ahmed", unpaid: 0 },
+      { name: "Om Omar", unpaid: 0 },
+      { name: "Hossam Kassem", unpaid: 0 }
+    ];
+
+    function updatePeopleList() {
       const list = document.getElementById("peopleUl");
       const container = document.getElementById("peopleList");
       list.innerHTML = "";
-      people.forEach(p => {
-          const li = document.createElement("li");
-          li.textContent = `${p.name}: ${p.unpaid.toFixed(2)} egp`;
-          list.appendChild(li);
+      people.forEach((p, i) => {
+        const li = document.createElement("li");
+        li.className = "bg-white px-3 py-1 rounded-lg shadow-sm flex items-center gap-2";
+        li.innerHTML = `
+          <span>${p.name}</span>
+          <input type="number" value="${p.unpaid}" onchange="updateUnpaid(${i}, this.value)" class="w-20 p-1 text-sm border rounded" />
+        `;
+        list.appendChild(li);
       });
       container.classList.remove("hidden");
-  }
+    }
 
-  function calculate() {
+    function updateUnpaid(index, value) {
+      const val = parseFloat(value);
+      people[index].unpaid = isNaN(val) ? 0 : val;
+    }
+
+    function addPerson() {
+      const name = document.getElementById("personName").value.trim();
+      const unpaid = parseFloat(document.getElementById("unpaidAmount").value);
+      if (!name || isNaN(unpaid) || unpaid < 0) {
+        alert(lang === "en" ? "Please enter a valid name and amount." : "يرجى إدخال اسم ومبلغ صحيح.");
+        return;
+      }
+      people.push({ name, unpaid });
+      document.getElementById("personName").value = "";
+      document.getElementById("unpaidAmount").value = "";
+      updatePeopleList();
+    }
+
+    function calculate() {
       const totalBill = parseFloat(document.getElementById("totalBill").value);
       const output = document.getElementById("output");
       output.innerHTML = "";
 
       if (people.length === 0) {
-          output.innerHTML = `<div class="text-red-600 font-semibold">⚠️ add person first</div>`;
-          return;
+        output.innerHTML = `<div class="text-red-600 font-semibold">⚠️ ${lang === "en" ? "Add person first" : "أضف شخصاً أولاً"}</div>`;
+        return;
       }
 
       if (isNaN(totalBill) || totalBill < 0) {
-          output.innerHTML = `<div class="text-red-600 font-semibold">⚠️ enter a value for the bill</div>`;
-          return;
+        output.innerHTML = `<div class="text-red-600 font-semibold">⚠️ ${lang === "en" ? "Enter a valid bill amount" : "أدخل قيمة صحيحة للفاتورة"}</div>`;
+        return;
       }
 
       const totalUnpaid = people.reduce((sum, p) => sum + p.unpaid, 0);
       const difference = Math.abs(totalBill - totalUnpaid);
       const share = difference / people.length;
 
-      let summary = `
-          <div class="bg-blue-100 rounded-lg p-4">
-              <p class="font-medium">📊 Total unpaid from previous bills: <strong>${totalUnpaid.toFixed(2)} EGP</strong></p>
-              <p class="font-medium">🧮 Difference between new bill and unpaid total: <strong>${difference.toFixed(2)} EGP</strong></p>
-              <p class="font-medium">💧 Each person pays from new bill: <strong>${share.toFixed(2)} EGP</strong></p>
-          </div>
+      const summary = `
+        <div class="bg-blue-100 rounded-lg p-4">
+          <p class="font-medium">📊 ${lang === "en" ? "Total unpaid so far" : "المجموع المتبقي"}: <strong>${totalUnpaid.toFixed(2)} جنيه</strong></p>
+          <p class="font-medium">🧮 ${lang === "en" ? "Difference" : "الفرق"}: <strong>${difference.toFixed(2)} جنيه</strong></p>
+          <p class="font-medium">💧 ${lang === "en" ? "Share per person" : "حصة الفرد"}: <strong>${share.toFixed(2)} جنيه</strong></p>
+        </div>
       `;
 
-      let tableRows = people.map(p => {
-          const totalDue = p.unpaid + share;
-          return `
-              <tr class="border-b">
-                  <td class="py-2 px-4">${p.name}</td>
-                  <td class="py-2 px-4 text-center">${p.unpaid.toFixed(2)}</td>
-                  <td class="py-2 px-4 text-center">${share.toFixed(2)}</td>
-                  <td class="py-2 px-4 text-center font-semibold text-blue-700">${totalDue.toFixed(2)}</td>
-              </tr>
-          `;
+      const rows = people.map(p => {
+        const due = p.unpaid + share;
+        return `
+          <tr class="border-b">
+            <td class="py-2 px-4">${p.name}</td>
+            <td class="py-2 px-4 text-center">${p.unpaid.toFixed(2)}</td>
+            <td class="py-2 px-4 text-center">${share.toFixed(2)}</td>
+            <td class="py-2 px-4 text-center font-semibold text-blue-700">${due.toFixed(2)}</td>
+          </tr>
+        `;
       }).join("");
 
-      const tableHTML = `
-          <div>
-              <h3 class="text-lg font-bold mt-4 mb-2 text-gray-800">📌 Final Amount Due per Person</h3>
-              <table class="w-full border border-gray-300 rounded-lg overflow-hidden text-sm">
-                  <thead class="bg-blue-100">
-                      <tr>
-                          <th class="py-2 px-4 text-left">Name</th>
-                          <th class="py-2 px-4 text-center">Previous Unpaid (EGP)</th>
-                          <th class="py-2 px-4 text-center">New Share (EGP)</th>
-                          <th class="py-2 px-4 text-center">Total Due (EGP)</th>
-                      </tr>
-                  </thead>
-                  <tbody>${tableRows}</tbody>
-              </table>
-          </div>
+      const table = `
+        <div>
+          <h3 class="text-lg font-bold mt-4 mb-2 text-gray-800">📌 ${lang === "en" ? "Final Amount Due" : "المبلغ النهائي لكل شخص"}</h3>
+          <table class="w-full border border-gray-300 rounded-lg overflow-hidden text-sm">
+            <thead class="bg-blue-100">
+              <tr>
+                <th class="py-2 px-4 text-left">${lang === "en" ? "Name" : "الاسم"}</th>
+                <th class="py-2 px-4 text-center">${lang === "en" ? "Unpaid" : "المتبقي"}</th>
+                <th class="py-2 px-4 text-center">${lang === "en" ? "Share" : "الحصة"}</th>
+                <th class="py-2 px-4 text-center">${lang === "en" ? "Total Due" : "الإجمالي"}</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       `;
 
-      output.innerHTML = summary + tableHTML;
-  }
+      output.innerHTML = summary + table;
+      document.getElementById("downloadPdfBtn").classList.remove("hidden");
+    }
 
-  function resetAll() {
+    function resetAll() {
+      people.length = 0;
       document.getElementById("personName").value = "";
       document.getElementById("unpaidAmount").value = "";
       document.getElementById("totalBill").value = "";
       document.getElementById("peopleUl").innerHTML = "";
       document.getElementById("peopleList").classList.add("hidden");
       document.getElementById("output").innerHTML = "";
-      people.length = 0;
-  }
+      document.getElementById("downloadPdfBtn").classList.add("hidden");
+    }
 
-  function downloadPDF() {
-      const element = document.getElementById('output');
-      html2pdf()
-        .set({ margin:       0.5,
-               filename:     'water-bill.pdf',
-               image:        { type: 'jpeg', quality: 0.98 },
-               html2canvas:  { scale: 2 },
-               jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-        })
-        .from(element)
-        .save();
-  }
+    function downloadPDF() {
+      html2pdf().from(document.getElementById("output")).save(lang === "en" ? "water-bill.pdf" : "فاتورة_المياه.pdf");
+    }
 
-  document.getElementById('downloadPdfBtn').classList.remove('hidden');
-</script>
+    function toggleLanguage() {
+      const html = document.documentElement;
+      lang = lang === "en" ? "ar" : "en";
+      html.lang = lang;
+      html.dir = lang === "ar" ? "rtl" : "ltr";
+      document.getElementById("title").textContent = lang === "en" ? "💧 Water Bill Splitter" : "💧 مقسم فاتورة المياه";
+      document.getElementById("addBtn").textContent = lang === "en" ? "Add Person" : "إضافة شخص";
+      document.getElementById("totalLabel").textContent = lang === "en" ? "Enter New Bill (EGP)" : "أدخل قيمة الفاتورة الجديدة (جنيه)";
+      document.getElementById("calcBtn").textContent = lang === "en" ? "Calculate" : "احسب";
+      document.getElementById("resetBtn").textContent = lang === "en" ? "Reset" : "إعادة تعيين";
+      document.querySelector("button[onclick='toggleLanguage()']").textContent = lang === "en" ? "العربية" : "English";
+      updatePeopleList();
+    }
+
+    // Initialize with default people
+    updatePeopleList();
 
 
+    function downloadPDF() {
+      const finalAmountDueSection = document.querySelector('#output div:nth-child(2)');
+      html2pdf().from(finalAmountDueSection).save("فاتورة_المياه.pdf");
+    }
+    
+    
+  </script>
 </body>
 </html>
